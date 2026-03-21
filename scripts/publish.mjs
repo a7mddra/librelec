@@ -174,7 +174,7 @@ try {
       );
     } else {
       publish(
-        `npm publish ${tmpPackageDir} --registry=${GITHUB_REGISTRY}`,
+        `npm publish ${tmpPackageDir} --registry=${GITHUB_REGISTRY} --ignore-scripts`,
         "GitHub Packages publish",
       );
     }
