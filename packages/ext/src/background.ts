@@ -1,0 +1,129 @@
+import type { ExtResponse, TuiCommand } from "./protocol";
+import { WS_URL } from "./protocol";
+
+let ws: WebSocket | null = null;
+let reconnectDelay = 1000;
+const MAX_RECONNECT_DELAY = 5_000;
+const CONTENT_SCRIPT_RETRIES = 3;
+const CONTENT_SCRIPT_RETRY_DELAY = 2_000;
+
+// ── Find the active .edu tab ─────────────────────────────────────
+
+async function findEduTab(): Promise<chrome.tabs.Tab | null> {
+  const tabs = await chrome.tabs.query({ url: "*://*.sml4.dmu.edu.eg/*" });
+  // Prefer the active tab, fall back to the first match
+  return tabs.find((t) => t.active) ?? tabs[0] ?? null;
+}
+
+// ── Send a message to content script with retries ────────────────
+
+async function sendToContentScript(
+  tabId: number,
+  command: TuiCommand,
+): Promise<ExtResponse> {
+  for (let attempt = 1; attempt <= CONTENT_SCRIPT_RETRIES; attempt++) {
+    try {
+      const response = await chrome.tabs.sendMessage(tabId, command);
+      return response as ExtResponse;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      const isNotReady =
+        msg.includes("Receiving end does not exist") ||
+        msg.includes("Could not establish connection");
+
+      if (isNotReady && attempt < CONTENT_SCRIPT_RETRIES) {
+        console.log(
+          `[libre-lec] content script not ready, retry ${attempt}/${CONTENT_SCRIPT_RETRIES} in ${CONTENT_SCRIPT_RETRY_DELAY / 1000}s...`,
+        );
+        await new Promise((r) => setTimeout(r, CONTENT_SCRIPT_RETRY_DELAY));
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw new Error("Unreachable");
+}
+
+// ── Handle incoming TUI commands ─────────────────────────────────
+
+async function handleTuiCommand(raw: string): Promise<void> {
+  let command: TuiCommand;
+  try {
+    command = JSON.parse(raw) as TuiCommand;
+  } catch {
+    console.warn("[libre-lec] bad JSON from TUI:", raw);
+    return;
+  }
+
+  // ping is handled locally — no need to involve content scripts
+  if (command.cmd === "ping") {
+    const tab = await findEduTab();
+    const response: ExtResponse = {
+      cmd: "pong",
+      tab: {
+        title: tab?.title ?? "(no .edu tab found)",
+        url: tab?.url ?? "",
+      },
+    };
+    send(response);
+    return;
+  }
+
+  // Everything else gets forwarded to the content script
+  const tab = await findEduTab();
+  if (!tab?.id) {
+    send({ cmd: "error", message: "No .edu tab found." });
+    return;
+  }
+
+  try {
+    const response = await sendToContentScript(tab.id, command);
+    send(response);
+  } catch (e) {
+    send({
+      cmd: "error",
+      message: `Failed to reach content script: ${e instanceof Error ? e.message : String(e)}`,
+    });
+  }
+}
+
+// ── WebSocket management ─────────────────────────────────────────
+
+function send(data: ExtResponse): void {
+  if (ws?.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(data));
+  }
+}
+
+function connect(): void {
+  console.log(`[libre-lec] connecting to ${WS_URL}...`);
+
+  ws = new WebSocket(WS_URL);
+
+  ws.onopen = () => {
+    console.log("[libre-lec] connected ✓");
+    reconnectDelay = 1000; // reset backoff
+  };
+
+  ws.onmessage = (event) => {
+    handleTuiCommand(event.data as string);
+  };
+
+  ws.onclose = () => {
+    console.log(
+      `[libre-lec] disconnected — retrying in ${reconnectDelay / 1000}s`,
+    );
+    ws = null;
+    setTimeout(connect, reconnectDelay);
+    reconnectDelay = Math.min(reconnectDelay * 2, MAX_RECONNECT_DELAY);
+  };
+
+  ws.onerror = () => {
+    // onclose will fire after onerror, so reconnect is handled there
+    ws?.close();
+  };
+}
+
+// ── Boot ─────────────────────────────────────────────────────────
+
+connect();

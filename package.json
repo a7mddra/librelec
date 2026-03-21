@@ -18,7 +18,7 @@
     "tsc:ext": "npm run typecheck --workspace @libre-lec/ext",
     "tsc:tui": "npm run typecheck --workspace libre-lec",
     "sanitize:fixture": "scripts/sanitize-fixture.sh",
-    "test:page-bridge": "tsx tests/terminal-page-bridge.test.ts",
+    "test:page-bridge": "tsx tests/page-bridge.test.ts",
     "test:live-telemetry": "tsx tests/live-telemetry.test.ts"
   },
   "devDependencies": {

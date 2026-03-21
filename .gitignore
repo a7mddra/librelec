@@ -24,6 +24,7 @@ packages/*/dist/
 .tsc-cache/
 
 # Test coverage
+test.png
 coverage/
 .nyc_output/
 
