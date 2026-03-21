@@ -1,4 +1,4 @@
-// ── Libre-Lec  ·  Page Bridge ────────────────────────────────────
+// ── librelec  ·  Page Bridge ────────────────────────────────────
 // Injected into the MAIN page world by content.ts.
 // Has full DOM + canvas access — this is where the actual scraping happens.
 
@@ -145,4 +145,4 @@ window.addEventListener("message", (event: MessageEvent) => {
   }
 });
 
-console.log("[libre-lec] page-bridge injected");
+console.log("[librelec] page-bridge injected");

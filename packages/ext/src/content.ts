@@ -1,4 +1,4 @@
-// ── Libre-Lec  ·  Content Script ─────────────────────────────────
+// ── librelec  ·  Content Script ─────────────────────────────────
 // Runs in the ISOLATED content-script world on matched .edu pages.
 // Bridges chrome.runtime messages ↔ window.postMessage (page world).
 
@@ -51,4 +51,4 @@ chrome.runtime.onMessage.addListener(
   },
 );
 
-console.log("[libre-lec] content script loaded");
+console.log("[librelec] content script loaded");

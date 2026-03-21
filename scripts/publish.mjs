@@ -5,7 +5,7 @@ import { execSync } from "node:child_process";
 
 const [, , target] = process.argv;
 
-const NPM_PACKAGE_NAME = process.env.LIBRE_LEC_NPM_NAME || "libre-lec";
+const NPM_PACKAGE_NAME = process.env.LIBRE_LEC_NPM_NAME || "librelec";
 const GITHUB_SCOPE = process.env.LIBRE_LEC_GITHUB_SCOPE || "@a7mddra";
 const GITHUB_REGISTRY = "https://npm.pkg.github.com";
 const GITHUB_PACKAGE_NAME = `${GITHUB_SCOPE}/${NPM_PACKAGE_NAME}`;
@@ -42,6 +42,21 @@ function run(command) {
   execSync(command, { stdio: "inherit" });
 }
 
+function runWithCapturedOutput(command) {
+  try {
+    const output = execSync(command, { stdio: "pipe" }).toString();
+    if (output) process.stdout.write(output);
+    return output;
+  } catch (error) {
+    const stdout = error?.stdout?.toString?.() || "";
+    const stderr = error?.stderr?.toString?.() || "";
+    if (stdout) process.stdout.write(stdout);
+    if (stderr) process.stderr.write(stderr);
+    error.capturedOutput = `${stdout}\n${stderr}`;
+    throw error;
+  }
+}
+
 function packageVersionExistsOnRegistry(packageName, version, registry) {
   try {
     execSync(`npm view ${packageName}@${version} version --registry=${registry}`, {
@@ -58,8 +73,9 @@ function packageVersionExistsOnRegistry(packageName, version, registry) {
 function isRepublishForbidden(error) {
   const stdout = error?.stdout?.toString?.() || "";
   const stderr = error?.stderr?.toString?.() || "";
+  const capturedOutput = error?.capturedOutput || "";
   const message = error?.message || "";
-  const merged = `${message}\n${stdout}\n${stderr}`;
+  const merged = `${message}\n${stdout}\n${stderr}\n${capturedOutput}`;
   return (
     /\bE403\b/i.test(merged) ||
     /cannot be republished until 24 hours have passed/i.test(merged)
@@ -68,7 +84,7 @@ function isRepublishForbidden(error) {
 
 function buildGithubPackageCopy() {
   const tmpRoot = fs.mkdtempSync(
-    path.join(os.tmpdir(), "libre-lec-gh-publish-"),
+    path.join(os.tmpdir(), "librelec-gh-publish-"),
   );
   const tmpPackageDir = path.join(tmpRoot, "tui");
 
@@ -111,7 +127,7 @@ try {
     );
   } else {
     try {
-      run(`npm publish --workspace ${NPM_PACKAGE_NAME}`);
+      runWithCapturedOutput(`npm publish --workspace ${NPM_PACKAGE_NAME}`);
     } catch (error) {
       if (!isRepublishForbidden(error)) throw error;
       console.warn(
@@ -138,7 +154,9 @@ try {
         `\x1b[33mSkipping GitHub publish: ${GITHUB_PACKAGE_NAME}@${packageVersion} already exists on GitHub Packages.\x1b[0m`,
       );
     } else {
-      run(`npm publish ${tmpPackageDir} --registry=${GITHUB_REGISTRY}`);
+      runWithCapturedOutput(
+        `npm publish ${tmpPackageDir} --registry=${GITHUB_REGISTRY}`,
+      );
     }
   } finally {
     fs.rmSync(tmpRoot, { recursive: true, force: true });

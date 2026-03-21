@@ -14,7 +14,7 @@ let tempDir: string | null = null;
 export function getTempDir(): string {
   if (!tempDir) {
     const base = tmpdir();
-    tempDir = join(base, `libre-lec-${Date.now()}`);
+    tempDir = join(base, `librelec-${Date.now()}`);
     mkdirSync(tempDir, { recursive: true });
   }
   return tempDir;

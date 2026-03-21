@@ -1,8 +1,8 @@
 {
-  "name": "@libre-lec/ext",
+  "name": "@librelec/ext",
   "private": true,
   "version": "0.1.0",
-  "description": "Chrome extension bridge for libre-lec.",
+  "description": "Chrome extension bridge for librelec.",
   "scripts": {
     "build": "node ./scripts/build.mjs",
     "dev": "node ./scripts/build.mjs --watch",

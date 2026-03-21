@@ -49,8 +49,8 @@ try {
     const readmePath = "README.md";
     let readme = fs.readFileSync(readmePath, "utf8");
     const updatedReadme = readme.replace(
-      /releases\/download\/v[^\/]+\/libre-lec-extension\.zip/g,
-      `releases/download/v${version}/libre-lec-extension.zip`,
+      /releases\/download\/v[^\/]+\/librelec-extension\.zip/g,
+      `releases/download/v${version}/librelec-extension.zip`,
     );
     if (readme !== updatedReadme) {
       fs.writeFileSync(readmePath, updatedReadme);

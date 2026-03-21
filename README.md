@@ -21,19 +21,19 @@ LibreLec works as a **Chrome Extension** paired with a **Terminal UI** (TUI). Th
 Default (npm):
 
 ```bash
-npm install -g libre-lec
+npm install -g librelec
 ```
 
 Optional (GitHub Packages):
 
 ```bash
 npm config set @a7mddra:registry https://npm.pkg.github.com
-npm install -g @a7mddra/libre-lec
+npm install -g @a7mddra/librelec
 ```
 
 ### 2. Install the Chrome Extension
 
-1. Download `libre-lec-extension.zip` from **[GitHub Releases](https://github.com/a7mddra/libre-lec/releases/download/v0.1.0/libre-lec-extension.zip)**.
+1. Download `librelec-extension.zip` from **[GitHub Releases](https://github.com/a7mddra/librelec/releases/download/v0.1.0/librelec-extension.zip)**.
 2. Extract the zip file.
 3. Open [`chrome://extensions`](chrome://extensions) in your browser.
 4. Enable **"Developer mode"** (toggle in the top right).
@@ -43,7 +43,7 @@ npm install -g @a7mddra/libre-lec
 ### 3. Extract Lectures
 
 1. Open the protected lecture page in Chrome and **log in normally**.
-2. In your terminal, run: `libre-lec`.
+2. In your terminal, run: `librelec`.
 3. The TUI will:
    - Wait for the extension to connect.
    - Scan for protected slides.
@@ -59,7 +59,7 @@ npm install -g @a7mddra/libre-lec
 ```text
 ┌─────────────────┐       WebSocket        ┌─────────────────┐
 │  Chrome Extension│◄────────────────────►│   Terminal UI     │
-│  (canvas reader) │    ws://localhost:27631│  (libre-lec CLI) │
+│  (canvas reader) │    ws://localhost:27631│  (librelec CLI) │
 └─────────────────┘                        └─────────────────┘
         │                                          │
    page-bridge.ts                             Sharp + pdf-lib

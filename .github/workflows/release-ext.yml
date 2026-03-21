@@ -30,10 +30,10 @@ jobs:
       - name: Zip Extension
         run: |
           cd packages/ext/dist
-          zip -r ../../../libre-lec-extension.zip ./*
+          zip -r ../../../librelec-extension.zip ./*
 
       - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create ${{ github.ref_name }} libre-lec-extension.zip --title "Release ${{ github.ref_name }}" --notes "Automated release of the libre-lec Chrome extension."
+          gh release create ${{ github.ref_name }} librelec-extension.zip --title "Release ${{ github.ref_name }}" --notes "Automated release of the librelec Chrome extension."

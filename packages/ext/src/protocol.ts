@@ -1,4 +1,4 @@
-// ── Libre-Lec  ·  Shared Protocol ────────────────────────────────
+// ── librelec  ·  Shared Protocol ────────────────────────────────
 
 /** Default WebSocket port the TUI listens on. */
 export const WS_PORT = 27631;
@@ -10,7 +10,7 @@ export const WS_URL = `ws://localhost:${WS_PORT}`;
  * Unique source tag appended to every window.postMessage so the
  * content-script can filter out noise from other scripts on the page.
  */
-export const MSG_SOURCE = "libre-lec" as const;
+export const MSG_SOURCE = "librelec" as const;
 
 // ── CSS Selectors (carried from pylec config.py) ─────────────────
 

@@ -1,5 +1,5 @@
 {
-  "name": "libre-lec",
+  "name": "librelec",
   "version": "0.1.0",
   "type": "module",
   "description": "extract high-resolution slides from protected university viewers.",
@@ -15,12 +15,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/a7mddra/libre-lec.git",
+    "url": "https://github.com/a7mddra/librelec.git",
     "directory": "packages/tui"
   },
   "bin": {
-    "libre-lec": "bin/libre-lec.mjs",
-    "librelec": "bin/libre-lec.mjs"
+    "librelec": "bin/librelec.mjs",
+    "librelec": "bin/librelec.mjs"
   },
   "files": [
     "bin/",

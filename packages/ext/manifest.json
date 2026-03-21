@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Libre-Lec Bridge",
+  "name": "librelec Bridge",
   "version": "0.1.0",
-  "description": "Bridge .edu pages with a local libre-lec process.",
+  "description": "Bridge .edu pages with a local librelec process.",
   "permissions": ["tabs", "scripting"],
   "host_permissions": ["*://*.sml4.dmu.edu.eg/*", "ws://localhost/*"],
   "content_security_policy": {

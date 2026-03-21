@@ -17,7 +17,7 @@ async function findEduTab(): Promise<chrome.tabs.Tab | null> {
 // ── Inject content script programmatically ───────────────────────
 
 async function injectContentScript(tabId: number): Promise<void> {
-  console.log("[libre-lec] injecting content script programmatically...");
+  console.log("[librelec] injecting content script programmatically...");
   try {
     await chrome.scripting.executeScript({
       target: { tabId },
@@ -25,10 +25,10 @@ async function injectContentScript(tabId: number): Promise<void> {
     });
     // Give it a moment to set up listeners + inject page-bridge
     await new Promise((r) => setTimeout(r, 1_000));
-    console.log("[libre-lec] content script injected ✓");
+    console.log("[librelec] content script injected ✓");
   } catch (e) {
     console.warn(
-      "[libre-lec] programmatic injection failed:",
+      "[librelec] programmatic injection failed:",
       e instanceof Error ? e.message : String(e),
     );
   }
@@ -61,7 +61,7 @@ async function sendToContentScript(
         }
 
         console.log(
-          `[libre-lec] content script not ready, retry ${attempt}/${CONTENT_SCRIPT_RETRIES}...`,
+          `[librelec] content script not ready, retry ${attempt}/${CONTENT_SCRIPT_RETRIES}...`,
         );
         await new Promise((r) => setTimeout(r, CONTENT_SCRIPT_RETRY_DELAY));
         continue;
@@ -79,7 +79,7 @@ async function handleTuiCommand(raw: string): Promise<void> {
   try {
     command = JSON.parse(raw) as TuiCommand;
   } catch {
-    console.warn("[libre-lec] bad JSON from TUI:", raw);
+    console.warn("[librelec] bad JSON from TUI:", raw);
     return;
   }
 
@@ -124,12 +124,12 @@ function send(data: ExtResponse): void {
 }
 
 function connect(): void {
-  console.log(`[libre-lec] connecting to ${WS_URL}...`);
+  console.log(`[librelec] connecting to ${WS_URL}...`);
 
   ws = new WebSocket(WS_URL);
 
   ws.onopen = () => {
-    console.log("[libre-lec] connected ✓");
+    console.log("[librelec] connected ✓");
     reconnectDelay = 500; // reset backoff
   };
 
@@ -139,7 +139,7 @@ function connect(): void {
 
   ws.onclose = () => {
     console.log(
-      `[libre-lec] disconnected — retrying in ${reconnectDelay / 1000}s`,
+      `[librelec] disconnected — retrying in ${reconnectDelay / 1000}s`,
     );
     ws = null;
     setTimeout(connect, reconnectDelay);

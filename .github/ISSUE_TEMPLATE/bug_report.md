@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve libre-lec
+about: Create a report to help us improve librelec
 title: "[BUG] "
 labels: bug
 assignees: ""
@@ -12,7 +12,7 @@ A clear and concise description of what the bug is.
 **To Reproduce**
 Steps to reproduce the behavior:
 
-1. Start libre-lec with '...'
+1. Start librelec with '...'
 2. Press '....'
 3. See error
 
@@ -28,7 +28,7 @@ If applicable, paste terminal output or add screenshots to help explain your pro
 - Terminal Emulator: [e.g. Alacritty, GNOME Terminal, iTerm2, Windows Terminal]
 - Node.js Version: [e.g. 18.19.0]
 - Browser (for online mode): [e.g. Chrome 120]
-- libre-lec version: [e.g. 0.1.0]
+- librelec version: [e.g. 0.1.0]
 
 **Additional context**
 Add any other context about the problem here.

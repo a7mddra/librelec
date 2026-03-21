@@ -23,4 +23,4 @@ If you find a security vulnerability in the code or dependencies, please open an
 
 ## Supported Versions
 
-Only the latest version published to npm (`libre-lec@latest`) and the latest GitHub Release are supported.
+Only the latest version published to npm (`librelec@latest`) and the latest GitHub Release are supported.
