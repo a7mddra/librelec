@@ -1,5 +1,5 @@
 {
-  "name": "@a7mddra/libre-lec",
+  "name": "libre-lec",
   "version": "0.1.0",
   "type": "module",
   "description": "extract high-resolution slides from protected university viewers.",
