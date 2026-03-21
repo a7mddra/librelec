@@ -60,10 +60,10 @@ npm install -g libre-lec
    canvas.toDataURL()                      PNG→JPEG → PDF assembly
 ```
 
-| Package | Purpose |
-|---|---|
+| Package        | Purpose                                                             |
+| -------------- | ------------------------------------------------------------------- |
 | `packages/ext` | Chrome Extension (MV3) — reads canvas pixels from protected viewers |
-| `packages/tui` | Terminal UI — WS server, extraction orchestration, PDF compression |
+| `packages/tui` | Terminal UI — WS server, extraction orchestration, PDF compression  |
 
 ---
 
