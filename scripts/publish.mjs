@@ -104,25 +104,34 @@ async function waitForEnter(prompt) {
   }
 }
 
-async function publishWithOtpRetry(publishCommand, loginCommand, label) {
-  try {
-    runWithCapturedOutput(publishCommand);
-  } catch (error) {
-    if (isRepublishForbidden(error)) {
-      console.warn(`\x1b[33mSkipping ${label}: registry rejected republish.\x1b[0m`);
+async function publishWithOtpRetry(publishCommand, label) {
+  const maxOtpRetries = 3;
+
+  for (let attempt = 1; attempt <= maxOtpRetries; attempt += 1) {
+    try {
+      runWithCapturedOutput(publishCommand);
       return;
-    }
+    } catch (error) {
+      if (isRepublishForbidden(error)) {
+        console.warn(`\x1b[33mSkipping ${label}: registry rejected republish.\x1b[0m`);
+        return;
+      }
 
-    if (!isOtpRequired(error)) {
-      throw error;
-    }
+      if (!isOtpRequired(error)) {
+        throw error;
+      }
 
-    console.warn(
-      `\x1b[33m${label} requires OTP/CLI browser auth. Complete the auth URL shown above, then retrying once...\x1b[0m`,
-    );
-    await waitForEnter("Press ENTER after authentication is completed to retry publish... ");
-    run(loginCommand);
-    runWithCapturedOutput(publishCommand);
+      if (attempt === maxOtpRetries) {
+        throw error;
+      }
+
+      console.warn(
+        `\x1b[33m${label} requires OTP/CLI browser auth. Complete the auth URL shown above, then retrying (${attempt}/${maxOtpRetries - 1})...\x1b[0m`,
+      );
+      await waitForEnter(
+        "Press ENTER after authentication is completed for this publish attempt... ",
+      );
+    }
   }
 }
 
@@ -170,11 +179,7 @@ try {
       `\x1b[33mSkipping npm publish: ${NPM_PACKAGE_NAME}@${packageVersion} already exists on npm.\x1b[0m`,
     );
   } else {
-    await publishWithOtpRetry(
-      `npm publish --workspace ${NPM_PACKAGE_NAME}`,
-      "npm login",
-      "npm publish",
-    );
+    await publishWithOtpRetry(`npm publish --workspace ${NPM_PACKAGE_NAME}`, "npm publish");
   }
 
   console.log(
@@ -197,7 +202,6 @@ try {
     } else {
       await publishWithOtpRetry(
         `npm publish ${tmpPackageDir} --registry=${GITHUB_REGISTRY}`,
-        `npm login --scope=${GITHUB_SCOPE} --registry=${GITHUB_REGISTRY}`,
         "GitHub Packages publish",
       );
     }
