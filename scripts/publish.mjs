@@ -7,7 +7,7 @@ import { execSync, spawnSync } from "node:child_process";
 const [, , target] = process.argv;
 
 // Load configuration
-const configPath = path.resolve(process.cwd(), "publish.config.json");
+const configPath = path.resolve(process.cwd(), "pkg-tools.config.json");
 let config = {};
 if (fs.existsSync(configPath)) {
   try {
@@ -29,7 +29,7 @@ const GITHUB_REGISTRY = "https://npm.pkg.github.com";
 
 if (!NPM_PACKAGE_NAME || !GITHUB_SCOPE) {
   console.error(
-    "\x1b[31mError: npmName and githubScope must be configured in publish.config.json or via env vars.\x1b[0m",
+    "\x1b[31mError: npmName and githubScope must be configured in pkg-tools.config.json or via env vars.\x1b[0m",
   );
   process.exit(1);
 }
