@@ -20,7 +20,7 @@ const buildOptions = {
   logLevel: "info",
   // Externalize all dependencies so they are installed via package.json
   // instead of being bundled into the output file.
-  external: ["ink", "react", "ws", "@opentui/core", "sharp", "pdf-lib", "arabic-reshaper"],
+  external: ["ink", "react", "ws", "@opentui/core", "sharp", "pdf-lib"],
   // Resolve `@/` to `src/` to match tsconfig paths
   alias: {
     "@": resolve(packageRoot, "src"),
