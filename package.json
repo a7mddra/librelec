@@ -7,17 +7,17 @@
     "packages/*"
   ],
   "scripts": {
-    "build:tui": "npm run build --workspace libre-lec",
+    "build:tui": "npm run build --workspace @a7mddra/libre-lec",
     "bump:ext": "node scripts/bump.mjs ext",
     "bump:tui": "node scripts/bump.mjs tui",
     "publish:tui": "node scripts/publish.mjs tui",
     "build:ext": "npm run build --workspace @libre-lec/ext",
     "dev:ext": "npm run dev --workspace @libre-lec/ext",
-    "dev:tui": "npm run dev --workspace libre-lec",
+    "dev:tui": "npm run dev --workspace @a7mddra/libre-lec",
     "format": "prettier --write .",
-    "start:tui": "npm run start --workspace libre-lec",
+    "start:tui": "npm run start --workspace @a7mddra/libre-lec",
     "tsc:ext": "npm run typecheck --workspace @libre-lec/ext",
-    "tsc:tui": "npm run typecheck --workspace libre-lec",
+    "tsc:tui": "npm run typecheck --workspace @a7mddra/libre-lec",
     "sanitize:fixture": "scripts/sanitize-fixture.sh",
     "test:page-bridge": "tsx tests/page-bridge.test.ts",
     "test:live-telemetry": "tsx tests/live-telemetry.test.ts"

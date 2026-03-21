@@ -21,7 +21,7 @@ LibreLec works as a **Chrome Extension** paired with a **Terminal UI** (TUI). Th
 Default (npm):
 
 ```bash
-npm install -g libre-lec
+npm install -g @a7mddra/libre-lec
 ```
 
 Optional (GitHub Packages):
