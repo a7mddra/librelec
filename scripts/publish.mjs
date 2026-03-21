@@ -28,7 +28,9 @@ const BUILD_COMMAND = process.env.PUBLISH_BUILD_COMMAND || config.buildCommand;
 const GITHUB_REGISTRY = "https://npm.pkg.github.com";
 
 if (!NPM_PACKAGE_NAME || !GITHUB_SCOPE) {
-  console.error("\x1b[31mError: npmName and githubScope must be configured in publish.config.json or via env vars.\x1b[0m");
+  console.error(
+    "\x1b[31mError: npmName and githubScope must be configured in publish.config.json or via env vars.\x1b[0m",
+  );
   process.exit(1);
 }
 
@@ -36,7 +38,9 @@ const GITHUB_PACKAGE_NAME = `${GITHUB_SCOPE}/${NPM_PACKAGE_NAME}`;
 const PACKAGE_JSON_PATH = path.join(PACKAGE_DIR, "package.json");
 
 if (!fs.existsSync(PACKAGE_JSON_PATH)) {
-  console.error(`\x1b[31mError: package.json not found in ${PACKAGE_DIR}\x1b[0m`);
+  console.error(
+    `\x1b[31mError: package.json not found in ${PACKAGE_DIR}\x1b[0m`,
+  );
   process.exit(1);
 }
 
@@ -62,9 +66,12 @@ function run(command) {
 
 function packageVersionExistsOnRegistry(packageName, version, registry) {
   try {
-    execSync(`npm view ${packageName}@${version} version --registry=${registry}`, {
-      stdio: "pipe",
-    })
+    execSync(
+      `npm view ${packageName}@${version} version --registry=${registry}`,
+      {
+        stdio: "pipe",
+      },
+    )
       .toString()
       .trim();
     return true;
@@ -115,7 +122,9 @@ function publish(publishCommand, label) {
   };
 
   if (isRepublishForbidden(diagError)) {
-    console.warn(`\x1b[33mSkipping ${label}: registry rejected republish.\x1b[0m`);
+    console.warn(
+      `\x1b[33mSkipping ${label}: registry rejected republish.\x1b[0m`,
+    );
     return;
   }
 
@@ -167,7 +176,13 @@ try {
   );
   run("npm login");
   const npmRegistry = "https://registry.npmjs.org";
-  if (packageVersionExistsOnRegistry(NPM_PACKAGE_NAME, packageVersion, npmRegistry)) {
+  if (
+    packageVersionExistsOnRegistry(
+      NPM_PACKAGE_NAME,
+      packageVersion,
+      npmRegistry,
+    )
+  ) {
     console.warn(
       `\x1b[33mSkipping npm publish: ${NPM_PACKAGE_NAME}@${packageVersion} already exists on npm.\x1b[0m`,
     );
