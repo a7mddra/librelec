@@ -6,11 +6,7 @@ import { Box, Text, useInput, useApp } from "ink";
 import { SpinnerText } from "./components/SpinnerText";
 import { UI_COLORS, LOGO, gradient } from "./lib";
 import { startWsServer, stopWsServer, sendCommand, getPort } from "./lib/ws";
-import {
-  saveSlideFromDataUrl,
-  assemblePdf,
-  cleanupTemp,
-} from "./lib/pdf";
+import { saveSlideFromDataUrl, assemblePdf, cleanupTemp } from "./lib/pdf";
 
 // ── BiDi Text Helper ─────────────────────────────────────────────
 // Wrap text in Unicode LRI (Left-to-Right Isolate) so the terminal's

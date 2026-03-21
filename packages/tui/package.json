@@ -1,6 +1,6 @@
 {
   "name": "libre-lec",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "extract high-resolution slides from protected university viewers.",
   "keywords": [
