@@ -2,6 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { execSync } from "node:child_process";
+import { createInterface } from "node:readline/promises";
 
 const [, , target] = process.argv;
 
@@ -82,6 +83,49 @@ function isRepublishForbidden(error) {
   );
 }
 
+function isOtpRequired(error) {
+  const stdout = error?.stdout?.toString?.() || "";
+  const stderr = error?.stderr?.toString?.() || "";
+  const capturedOutput = error?.capturedOutput || "";
+  const message = error?.message || "";
+  const merged = `${message}\n${stdout}\n${stderr}\n${capturedOutput}`;
+  return /\bEOTP\b/i.test(merged) || /one-time password/i.test(merged);
+}
+
+async function waitForEnter(prompt) {
+  const rl = createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  try {
+    await rl.question(prompt);
+  } finally {
+    rl.close();
+  }
+}
+
+async function publishWithOtpRetry(publishCommand, loginCommand, label) {
+  try {
+    runWithCapturedOutput(publishCommand);
+  } catch (error) {
+    if (isRepublishForbidden(error)) {
+      console.warn(`\x1b[33mSkipping ${label}: registry rejected republish.\x1b[0m`);
+      return;
+    }
+
+    if (!isOtpRequired(error)) {
+      throw error;
+    }
+
+    console.warn(
+      `\x1b[33m${label} requires OTP/CLI browser auth. Complete the auth URL shown above, then retrying once...\x1b[0m`,
+    );
+    await waitForEnter("Press ENTER after authentication is completed to retry publish... ");
+    run(loginCommand);
+    runWithCapturedOutput(publishCommand);
+  }
+}
+
 function buildGithubPackageCopy() {
   const tmpRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "librelec-gh-publish-"),
@@ -126,14 +170,11 @@ try {
       `\x1b[33mSkipping npm publish: ${NPM_PACKAGE_NAME}@${packageVersion} already exists on npm.\x1b[0m`,
     );
   } else {
-    try {
-      runWithCapturedOutput(`npm publish --workspace ${NPM_PACKAGE_NAME}`);
-    } catch (error) {
-      if (!isRepublishForbidden(error)) throw error;
-      console.warn(
-        `\x1b[33mSkipping npm publish: registry rejected republish of ${NPM_PACKAGE_NAME}@${packageVersion}.\x1b[0m`,
-      );
-    }
+    await publishWithOtpRetry(
+      `npm publish --workspace ${NPM_PACKAGE_NAME}`,
+      "npm login",
+      "npm publish",
+    );
   }
 
   console.log(
@@ -154,8 +195,10 @@ try {
         `\x1b[33mSkipping GitHub publish: ${GITHUB_PACKAGE_NAME}@${packageVersion} already exists on GitHub Packages.\x1b[0m`,
       );
     } else {
-      runWithCapturedOutput(
+      await publishWithOtpRetry(
         `npm publish ${tmpPackageDir} --registry=${GITHUB_REGISTRY}`,
+        `npm login --scope=${GITHUB_SCOPE} --registry=${GITHUB_REGISTRY}`,
+        "GitHub Packages publish",
       );
     }
   } finally {
