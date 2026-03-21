@@ -43,7 +43,9 @@ function run(command) {
 }
 
 function buildGithubPackageCopy() {
-  const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "libre-lec-gh-publish-"));
+  const tmpRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "libre-lec-gh-publish-"),
+  );
   const tmpPackageDir = path.join(tmpRoot, "tui");
 
   fs.cpSync(TUI_PACKAGE_DIR, tmpPackageDir, { recursive: true });
@@ -52,7 +54,10 @@ function buildGithubPackageCopy() {
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
   packageJson.name = GITHUB_PACKAGE_NAME;
   packageJson.publishConfig = { registry: GITHUB_REGISTRY };
-  fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + "\n");
+  fs.writeFileSync(
+    packageJsonPath,
+    JSON.stringify(packageJson, null, 2) + "\n",
+  );
 
   return { tmpRoot, tmpPackageDir };
 }
@@ -70,11 +75,15 @@ try {
   console.log("\x1b[36mBuilding TUI before publish...\x1b[0m");
   run("npm run build:tui");
 
-  console.log(`\x1b[36mPublishing ${NPM_PACKAGE_NAME} to npm registry...\x1b[0m`);
+  console.log(
+    `\x1b[36mPublishing ${NPM_PACKAGE_NAME} to npm registry...\x1b[0m`,
+  );
   run("npm login");
   run(`npm publish --workspace ${NPM_PACKAGE_NAME}`);
 
-  console.log(`\x1b[36mPreparing scoped package ${GITHUB_PACKAGE_NAME} for GitHub Packages...\x1b[0m`);
+  console.log(
+    `\x1b[36mPreparing scoped package ${GITHUB_PACKAGE_NAME} for GitHub Packages...\x1b[0m`,
+  );
   const { tmpRoot, tmpPackageDir } = buildGithubPackageCopy();
 
   try {
