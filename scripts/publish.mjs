@@ -1,8 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { execSync } from "node:child_process";
-import { createInterface } from "node:readline/promises";
+import { execSync, spawnSync } from "node:child_process";
 
 const [, , target] = process.argv;
 
@@ -43,21 +42,6 @@ function run(command) {
   execSync(command, { stdio: "inherit" });
 }
 
-function runWithCapturedOutput(command) {
-  try {
-    const output = execSync(command, { stdio: "pipe" }).toString();
-    if (output) process.stdout.write(output);
-    return output;
-  } catch (error) {
-    const stdout = error?.stdout?.toString?.() || "";
-    const stderr = error?.stderr?.toString?.() || "";
-    if (stdout) process.stdout.write(stdout);
-    if (stderr) process.stderr.write(stderr);
-    error.capturedOutput = `${stdout}\n${stderr}`;
-    throw error;
-  }
-}
-
 function packageVersionExistsOnRegistry(packageName, version, registry) {
   try {
     execSync(`npm view ${packageName}@${version} version --registry=${registry}`, {
@@ -71,68 +55,57 @@ function packageVersionExistsOnRegistry(packageName, version, registry) {
   }
 }
 
-function isRepublishForbidden(error) {
+function parseErrorOutput(error) {
   const stdout = error?.stdout?.toString?.() || "";
   const stderr = error?.stderr?.toString?.() || "";
-  const capturedOutput = error?.capturedOutput || "";
   const message = error?.message || "";
-  const merged = `${message}\n${stdout}\n${stderr}\n${capturedOutput}`;
+  return `${message}\n${stdout}\n${stderr}`;
+}
+
+function isRepublishForbidden(error) {
+  const merged = parseErrorOutput(error);
   return (
     /\bE403\b/i.test(merged) ||
     /cannot be republished until 24 hours have passed/i.test(merged)
   );
 }
 
-function isOtpRequired(error) {
-  const stdout = error?.stdout?.toString?.() || "";
-  const stderr = error?.stderr?.toString?.() || "";
-  const capturedOutput = error?.capturedOutput || "";
-  const message = error?.message || "";
-  const merged = `${message}\n${stdout}\n${stderr}\n${capturedOutput}`;
-  return /\bEOTP\b/i.test(merged) || /one-time password/i.test(merged);
-}
-
-async function waitForEnter(prompt) {
-  const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout,
+/**
+ * Publish using stdio:'inherit' so npm can handle interactive browser
+ * OTP auth natively (polling for token after opening the auth URL).
+ * Falls back to a piped diagnostic run only if the interactive run fails,
+ * to determine whether the error was OTP-related or something else.
+ */
+function publish(publishCommand, label) {
+  const result = spawnSync("sh", ["-c", publishCommand], {
+    stdio: "inherit",
+    env: process.env,
   });
-  try {
-    await rl.question(prompt);
-  } finally {
-    rl.close();
+
+  if (result.status === 0) return;
+
+  // Run a quick piped attempt to capture the error message for classification
+  const diagResult = spawnSync("sh", ["-c", publishCommand], {
+    stdio: "pipe",
+    env: process.env,
+  });
+
+  const diagError = {
+    stdout: diagResult.stdout,
+    stderr: diagResult.stderr,
+    message: `Command failed with exit code ${result.status}`,
+  };
+
+  if (isRepublishForbidden(diagError)) {
+    console.warn(`\x1b[33mSkipping ${label}: registry rejected republish.\x1b[0m`);
+    return;
   }
-}
 
-async function publishWithOtpRetry(publishCommand, label) {
-  const maxOtpRetries = 3;
-
-  for (let attempt = 1; attempt <= maxOtpRetries; attempt += 1) {
-    try {
-      runWithCapturedOutput(publishCommand);
-      return;
-    } catch (error) {
-      if (isRepublishForbidden(error)) {
-        console.warn(`\x1b[33mSkipping ${label}: registry rejected republish.\x1b[0m`);
-        return;
-      }
-
-      if (!isOtpRequired(error)) {
-        throw error;
-      }
-
-      if (attempt === maxOtpRetries) {
-        throw error;
-      }
-
-      console.warn(
-        `\x1b[33m${label} requires OTP/CLI browser auth. Complete the auth URL shown above, then retrying (${attempt}/${maxOtpRetries - 1})...\x1b[0m`,
-      );
-      await waitForEnter(
-        "Press ENTER after authentication is completed for this publish attempt... ",
-      );
-    }
-  }
+  // For any failure: throw with context
+  const error = new Error(`Command failed: ${publishCommand}`);
+  error.stdout = diagResult.stdout;
+  error.stderr = diagResult.stderr;
+  throw error;
 }
 
 function buildGithubPackageCopy() {
@@ -179,7 +152,7 @@ try {
       `\x1b[33mSkipping npm publish: ${NPM_PACKAGE_NAME}@${packageVersion} already exists on npm.\x1b[0m`,
     );
   } else {
-    await publishWithOtpRetry(`npm publish --workspace ${NPM_PACKAGE_NAME}`, "npm publish");
+    publish(`npm publish --workspace ${NPM_PACKAGE_NAME}`, "npm publish");
   }
 
   console.log(
@@ -200,7 +173,7 @@ try {
         `\x1b[33mSkipping GitHub publish: ${GITHUB_PACKAGE_NAME}@${packageVersion} already exists on GitHub Packages.\x1b[0m`,
       );
     } else {
-      await publishWithOtpRetry(
+      publish(
         `npm publish ${tmpPackageDir} --registry=${GITHUB_REGISTRY}`,
         "GitHub Packages publish",
       );
