@@ -1,0 +1,6 @@
+{
+  "npmName": "librelec",
+  "githubScope": "@a7mddra",
+  "packageDir": "packages/tui",
+  "buildCommand": "npm run build:tui"
+}

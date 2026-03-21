@@ -3,22 +3,40 @@ import os from "node:os";
 import path from "node:path";
 import { execSync, spawnSync } from "node:child_process";
 
+// Optional target argument for identifying specific builds if needed by the config
 const [, , target] = process.argv;
 
-const NPM_PACKAGE_NAME = process.env.LIBRE_LEC_NPM_NAME || "librelec";
-const GITHUB_SCOPE = process.env.LIBRE_LEC_GITHUB_SCOPE || "@a7mddra";
-const GITHUB_REGISTRY = "https://npm.pkg.github.com";
-const GITHUB_PACKAGE_NAME = `${GITHUB_SCOPE}/${NPM_PACKAGE_NAME}`;
-const TUI_PACKAGE_DIR = "packages/tui";
-const TUI_PACKAGE_JSON = path.join(TUI_PACKAGE_DIR, "package.json");
+// Load configuration
+const configPath = path.resolve(process.cwd(), "publish.config.json");
+let config = {};
+if (fs.existsSync(configPath)) {
+  try {
+    const rawConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
+    // If the config has multiple targets and one was specified, use that target's config
+    // Otherwise, use the root config
+    config = target && rawConfig[target] ? rawConfig[target] : rawConfig;
+  } catch (error) {
+    console.error(`\x1b[31mError parsing config file at ${configPath}\x1b[0m`);
+    process.exit(1);
+  }
+}
 
-if (!target) {
-  console.error("\x1b[31mUsage: node scripts/publish.mjs <tui>\x1b[0m");
+const NPM_PACKAGE_NAME = process.env.PUBLISH_NPM_NAME || config.npmName;
+const GITHUB_SCOPE = process.env.PUBLISH_GITHUB_SCOPE || config.githubScope;
+const PACKAGE_DIR = process.env.PUBLISH_PACKAGE_DIR || config.packageDir || ".";
+const BUILD_COMMAND = process.env.PUBLISH_BUILD_COMMAND || config.buildCommand;
+const GITHUB_REGISTRY = "https://npm.pkg.github.com";
+
+if (!NPM_PACKAGE_NAME || !GITHUB_SCOPE) {
+  console.error("\x1b[31mError: npmName and githubScope must be configured in publish.config.json or via env vars.\x1b[0m");
   process.exit(1);
 }
 
-if (target !== "tui") {
-  console.error('\x1b[31mError: Target must be "tui"\x1b[0m');
+const GITHUB_PACKAGE_NAME = `${GITHUB_SCOPE}/${NPM_PACKAGE_NAME}`;
+const PACKAGE_JSON_PATH = path.join(PACKAGE_DIR, "package.json");
+
+if (!fs.existsSync(PACKAGE_JSON_PATH)) {
+  console.error(`\x1b[31mError: package.json not found in ${PACKAGE_DIR}\x1b[0m`);
   process.exit(1);
 }
 
@@ -114,7 +132,7 @@ function buildGithubPackageCopy() {
   );
   const tmpPackageDir = path.join(tmpRoot, "tui");
 
-  fs.cpSync(TUI_PACKAGE_DIR, tmpPackageDir, { recursive: true });
+  fs.cpSync(PACKAGE_DIR, tmpPackageDir, { recursive: true });
 
   const packageJsonPath = path.join(tmpPackageDir, "package.json");
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
@@ -131,16 +149,18 @@ function buildGithubPackageCopy() {
 try {
   ensureCleanGitTree();
 
-  const tuiPackage = JSON.parse(fs.readFileSync(TUI_PACKAGE_JSON, "utf8"));
+  const tuiPackage = JSON.parse(fs.readFileSync(PACKAGE_JSON_PATH, "utf8"));
   const packageVersion = tuiPackage.version;
   if (tuiPackage.name !== NPM_PACKAGE_NAME) {
     console.warn(
-      `\x1b[33mWarning: ${TUI_PACKAGE_JSON} name is "${tuiPackage.name}" but LIBRE_LEC_NPM_NAME is "${NPM_PACKAGE_NAME}".\x1b[0m`,
+      `\x1b[33mWarning: ${PACKAGE_JSON_PATH} name is "${tuiPackage.name}" but NPM name is "${NPM_PACKAGE_NAME}".\x1b[0m`,
     );
   }
 
-  console.log("\x1b[36mBuilding TUI before publish...\x1b[0m");
-  run("npm run build:tui");
+  if (BUILD_COMMAND) {
+    console.log(`\x1b[36mRunning build command: ${BUILD_COMMAND}...\x1b[0m`);
+    run(BUILD_COMMAND);
+  }
 
   console.log(
     `\x1b[36mPublishing ${NPM_PACKAGE_NAME} to npm registry...\x1b[0m`,

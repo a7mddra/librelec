@@ -9,9 +9,6 @@ import { startWsServer, stopWsServer, sendCommand, getPort } from "./lib/ws";
 import { saveSlideFromDataUrl, assemblePdf, cleanupTemp } from "./lib/pdf";
 
 // ── BiDi Text Helper ─────────────────────────────────────────────
-// Wrap text in Unicode LRI (Left-to-Right Isolate) so the terminal's
-// BiDi algorithm treats it as a single directional run and doesn't
-// reorder surrounding LTR content.
 const LRI = "\u2066";
 const PDI = "\u2069";
 function bidi(text: string | undefined): string {
