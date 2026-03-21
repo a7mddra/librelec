@@ -42,6 +42,30 @@ function run(command) {
   execSync(command, { stdio: "inherit" });
 }
 
+function packageVersionExistsOnRegistry(packageName, version, registry) {
+  try {
+    execSync(`npm view ${packageName}@${version} version --registry=${registry}`, {
+      stdio: "pipe",
+    })
+      .toString()
+      .trim();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function isRepublishForbidden(error) {
+  const stdout = error?.stdout?.toString?.() || "";
+  const stderr = error?.stderr?.toString?.() || "";
+  const message = error?.message || "";
+  const merged = `${message}\n${stdout}\n${stderr}`;
+  return (
+    /\bE403\b/i.test(merged) ||
+    /cannot be republished until 24 hours have passed/i.test(merged)
+  );
+}
+
 function buildGithubPackageCopy() {
   const tmpRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "libre-lec-gh-publish-"),
@@ -66,6 +90,7 @@ try {
   ensureCleanGitTree();
 
   const tuiPackage = JSON.parse(fs.readFileSync(TUI_PACKAGE_JSON, "utf8"));
+  const packageVersion = tuiPackage.version;
   if (tuiPackage.name !== NPM_PACKAGE_NAME) {
     console.warn(
       `\x1b[33mWarning: ${TUI_PACKAGE_JSON} name is "${tuiPackage.name}" but LIBRE_LEC_NPM_NAME is "${NPM_PACKAGE_NAME}".\x1b[0m`,
@@ -79,7 +104,21 @@ try {
     `\x1b[36mPublishing ${NPM_PACKAGE_NAME} to npm registry...\x1b[0m`,
   );
   run("npm login");
-  run(`npm publish --workspace ${NPM_PACKAGE_NAME}`);
+  const npmRegistry = "https://registry.npmjs.org";
+  if (packageVersionExistsOnRegistry(NPM_PACKAGE_NAME, packageVersion, npmRegistry)) {
+    console.warn(
+      `\x1b[33mSkipping npm publish: ${NPM_PACKAGE_NAME}@${packageVersion} already exists on npm.\x1b[0m`,
+    );
+  } else {
+    try {
+      run(`npm publish --workspace ${NPM_PACKAGE_NAME}`);
+    } catch (error) {
+      if (!isRepublishForbidden(error)) throw error;
+      console.warn(
+        `\x1b[33mSkipping npm publish: registry rejected republish of ${NPM_PACKAGE_NAME}@${packageVersion}.\x1b[0m`,
+      );
+    }
+  }
 
   console.log(
     `\x1b[36mPreparing scoped package ${GITHUB_PACKAGE_NAME} for GitHub Packages...\x1b[0m`,
@@ -88,7 +127,19 @@ try {
 
   try {
     run(`npm login --scope=${GITHUB_SCOPE} --registry=${GITHUB_REGISTRY}`);
-    run(`npm publish ${tmpPackageDir} --registry=${GITHUB_REGISTRY}`);
+    if (
+      packageVersionExistsOnRegistry(
+        GITHUB_PACKAGE_NAME,
+        packageVersion,
+        GITHUB_REGISTRY,
+      )
+    ) {
+      console.warn(
+        `\x1b[33mSkipping GitHub publish: ${GITHUB_PACKAGE_NAME}@${packageVersion} already exists on GitHub Packages.\x1b[0m`,
+      );
+    } else {
+      run(`npm publish ${tmpPackageDir} --registry=${GITHUB_REGISTRY}`);
+    }
   } finally {
     fs.rmSync(tmpRoot, { recursive: true, force: true });
   }
