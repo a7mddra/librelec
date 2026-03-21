@@ -92,26 +92,12 @@ try {
     });
     execSync("git push origin main", { stdio: "inherit" });
 
-    console.log(`\x1b[36mPublishing to NPM registry...\x1b[0m`);
+    console.log(`\x1b[36mPublishing TUI to npm and GitHub Packages...\x1b[0m`);
+    execSync("node scripts/publish.mjs tui", { stdio: "inherit" });
 
-    // Check NPM Auth automatically
-    try {
-      execSync("npm whoami", { stdio: "ignore" });
-    } catch {
-      console.log(
-        `\x1b[33mNot authenticated to NPM. Initializing interactive login...\x1b[0m`,
-      );
-      execSync("npm login", { stdio: "inherit" });
-    }
-
-    try {
-      execSync("npm publish --workspace libre-lec", { stdio: "inherit" });
-      console.log(
-        `\x1b[32mSuccessfully bumped TUI to v${version}, pushed to GitHub, and fired NPM publish.\x1b[0m`,
-      );
-    } catch (err) {
-      console.error("\x1b[31mError: NPM Publish failed unexpectedly.\x1b[0m");
-    }
+    console.log(
+      `\x1b[32mSuccessfully bumped TUI to v${version}, pushed to GitHub, and published to both registries.\x1b[0m`,
+    );
   }
 } catch (error) {
   console.error(`\x1b[31mAn error occurred during the bump process.\x1b[0m`);

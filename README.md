@@ -18,8 +18,17 @@ LibreLec works as a **Chrome Extension** paired with a **Terminal UI** (TUI). Th
 
 ### 1. Install the CLI
 
+Default (npm):
+
 ```bash
 npm install -g libre-lec
+```
+
+Optional (GitHub Packages):
+
+```bash
+npm config set @a7mddra:registry https://npm.pkg.github.com
+npm install -g @a7mddra/libre-lec
 ```
 
 ### 2. Install the Chrome Extension
@@ -34,10 +43,7 @@ npm install -g libre-lec
 ### 3. Extract Lectures
 
 1. Open the protected lecture page in Chrome and **log in normally**.
-2. In your terminal, run:
-   ```bash
-   libre-lec
-   ```
+2. In your terminal, run: `libre-lec`.
 3. The TUI will:
    - Wait for the extension to connect.
    - Scan for protected slides.
@@ -50,7 +56,7 @@ npm install -g libre-lec
 
 ## 📦 Architecture
 
-```
+```text
 ┌─────────────────┐       WebSocket        ┌─────────────────┐
 │  Chrome Extension│◄────────────────────►│   Terminal UI     │
 │  (canvas reader) │    ws://localhost:27631│  (libre-lec CLI) │
@@ -88,7 +94,10 @@ npm run tsc:tui
 ### Releasing
 
 ```bash
-# Bump TUI → publish to npm
+# Publish current TUI version (npm + GitHub Packages)
+npm run publish:tui
+
+# Bump TUI → push commit → publish to npm + GitHub Packages
 node scripts/bump.mjs tui 0.2.0
 
 # Bump Extension → push tag → triggers GitHub Release
