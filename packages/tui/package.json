@@ -1,0 +1,46 @@
+{
+  "name": "libre-lec",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "extract high-resolution slides from protected university viewers.",
+  "keywords": [
+    "librelec",
+    "tui",
+    "terminal",
+    ".edu",
+    "ink",
+    "cli"
+  ],
+  "author": "a7mddra",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/a7mddra/libre-lec.git",
+    "directory": "packages/tui"
+  },
+  "bin": {
+    "libre-lec": "bin/libre-lec.mjs",
+    "librelec": "bin/libre-lec.mjs"
+  },
+  "files": [
+    "bin/",
+    "dist/"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "prepublishOnly": "npm run build",
+    "dev": "tsx src/main.tsx",
+    "start": "tsx src/main.tsx",
+    "typecheck": "tsc --project ./tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@opentui/core": "^0.1.87",
+    "ink": "^6.8.0",
+    "react": "^19.2.4",
+    "ws": "^8.18.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "react-devtools-core": "^6.1.2"
+  }
+}

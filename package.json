@@ -1,0 +1,34 @@
+{
+  "name": "libre-lec",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build:tui": "npm run build --workspace libre-lec",
+    "bump:ext": "node scripts/bump.mjs ext",
+    "bump:tui": "node scripts/bump.mjs tui",
+    "build:ext": "npm run build --workspace @libre-lec/ext",
+    "dev:ext": "npm run dev --workspace @libre-lec/ext",
+    "dev:tui": "npm run dev --workspace libre-lec",
+    "format": "prettier --write .",
+    "start:tui": "npm run start --workspace libre-lec",
+    "tsc:ext": "npm run typecheck --workspace @libre-lec/ext",
+    "tsc:tui": "npm run typecheck --workspace libre-lec",
+    "sanitize:fixture": "scripts/sanitize-fixture.sh",
+    "test:page-bridge": "tsx tests/terminal-page-bridge.test.ts",
+    "test:live-telemetry": "tsx tests/live-telemetry.test.ts"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.21",
+    "@types/node": "^22.13.11",
+    "@types/ws": "^8.18.1",
+    "esbuild": "^0.25.0",
+    "prettier": "^3.8.1",
+    "tsx": "^4.20.5",
+    "typescript": "^5.8.2",
+    "ws": "^8.18.1"
+  }
+}

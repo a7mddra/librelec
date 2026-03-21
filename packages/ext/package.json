@@ -1,0 +1,9 @@
+{
+  "name": "@libre-lec/ext",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Chrome extension bridge for libre-lec.",
+  "scripts": {
+    "build": "node ./scripts/build.mjs"
+  }
+}
