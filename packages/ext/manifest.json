@@ -3,11 +3,8 @@
   "name": "Libre-Lec Bridge",
   "version": "0.1.0",
   "description": "Bridge .edu pages with a local libre-lec process.",
-  "permissions": ["tabs"],
-  "host_permissions": [
-    "*://*.sml4.dmu.edu.eg/*",
-    "ws://localhost/*"
-  ],
+  "permissions": ["tabs", "scripting"],
+  "host_permissions": ["*://*.sml4.dmu.edu.eg/*", "ws://localhost/*"],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' ws://localhost:*;"
   },

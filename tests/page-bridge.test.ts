@@ -116,9 +116,7 @@ async function run(): Promise<void> {
         }
 
         if (extractRes.cmd !== "extract:result") {
-          throw new Error(
-            `Unexpected response: ${JSON.stringify(extractRes)}`,
-          );
+          throw new Error(`Unexpected response: ${JSON.stringify(extractRes)}`);
         }
 
         if (!extractRes.dataUrl.startsWith("data:image/png;base64,")) {
@@ -128,10 +126,7 @@ async function run(): Promise<void> {
         }
 
         // ── Step 3: Save to test.png ──────────────────
-        const base64 = extractRes.dataUrl.replace(
-          "data:image/png;base64,",
-          "",
-        );
+        const base64 = extractRes.dataUrl.replace("data:image/png;base64,", "");
         const buffer = Buffer.from(base64, "base64");
         const outPath = resolve(__dirname, "..", "test.png");
         writeFileSync(outPath, buffer);

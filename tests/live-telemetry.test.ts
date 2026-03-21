@@ -26,11 +26,19 @@ function run(): Promise<void> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       wss.close();
-      reject(new Error(`Timed out after ${TIMEOUT_MS / 1000}s — no connection from extension.`));
+      reject(
+        new Error(
+          `Timed out after ${TIMEOUT_MS / 1000}s — no connection from extension.`,
+        ),
+      );
     }, TIMEOUT_MS);
 
-    console.log(`\n⏳ Waiting for extension to connect on ws://127.0.0.1:${WS_PORT}...`);
-    console.log(`   (Make sure Chrome has the extension loaded and a .edu tab open)\n`);
+    console.log(
+      `\n⏳ Waiting for extension to connect on ws://127.0.0.1:${WS_PORT}...`,
+    );
+    console.log(
+      `   (Make sure Chrome has the extension loaded and a .edu tab open)\n`,
+    );
 
     const wss = new WebSocketServer({ port: WS_PORT });
 
@@ -60,12 +68,17 @@ function run(): Promise<void> {
         }
 
         if (!data.tab?.title || data.tab.title === "(no .edu tab found)") {
-          console.error("✗ FAIL: no .edu tab detected — is a sml4 page open in Chrome?");
+          console.error(
+            "✗ FAIL: no .edu tab detected — is a sml4 page open in Chrome?",
+          );
           passed = false;
         }
 
         if (!data.tab?.url?.includes("sml4.dmu.edu")) {
-          console.error("✗ FAIL: URL doesn't contain 'sml4.dmu.edu':", data.tab?.url);
+          console.error(
+            "✗ FAIL: URL doesn't contain 'sml4.dmu.edu':",
+            data.tab?.url,
+          );
           passed = false;
         }
 

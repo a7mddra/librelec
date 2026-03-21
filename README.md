@@ -4,11 +4,11 @@
 
 ## Features ✨
 
-*   **Canvas Hijack Protocol**: Captures the raw rendered pixels, bypassing disabled download buttons.
-*   **Retina Quality**: Uses a 2.5x device scale factor to ensure text remains crisp for OCR and AI processing.
-*   **Smart Auto-Discovery**: Detects DRM protection frames automatically.
-*   **Manual Login**: You log in securely with your own hands; the bot simply takes over once you're in.
-*   **Batch Friendly**: Smart naming (`Lec1`, `Lec2`, etc.) for extracting a whole semester quickly.
+- **Canvas Hijack Protocol**: Captures the raw rendered pixels, bypassing disabled download buttons.
+- **Retina Quality**: Uses a 2.5x device scale factor to ensure text remains crisp for OCR and AI processing.
+- **Smart Auto-Discovery**: Detects DRM protection frames automatically.
+- **Manual Login**: You log in securely with your own hands; the bot simply takes over once you're in.
+- **Batch Friendly**: Smart naming (`Lec1`, `Lec2`, etc.) for extracting a whole semester quickly.
 
 ---
 
@@ -32,17 +32,20 @@ We have a one-click setup script that handles the virtual environment (`venv`) a
 ### 🪟 Windows
 
 1.  **Create a Virtual Environment**:
+
     ```cmd
     python -m venv venv
     ```
 
 2.  **Activate it**:
+
     ```cmd
     venv\Scripts\activate
     ```
 
 3.  **Run the Installer**:
     This script will install all dependencies (including `nest_asyncio`) and the Chromium browser engine.
+
     ```cmd
     python setup.py
     ```
@@ -63,10 +66,10 @@ We have a one-click setup script that handles the virtual environment (`venv`) a
 5.  Navigate to the page with the locked PDF viewer.
 6.  Return to the terminal and press `ENTER`.
 7.  The tool will:
-    *   Find the PDF frame.
-    *   Count the pages.
-    *   Scan each page at high resolution.
-    *   Merge them into a PDF in your `Documents` folder.
+    - Find the PDF frame.
+    - Count the pages.
+    - Scan each page at high resolution.
+    - Merge them into a PDF in your `Documents` folder.
 
 ## ⚠️ Disclaimer
 

@@ -2,17 +2,36 @@ import type { ExtResponse, TuiCommand } from "./protocol";
 import { WS_URL } from "./protocol";
 
 let ws: WebSocket | null = null;
-let reconnectDelay = 1000;
-const MAX_RECONNECT_DELAY = 5_000;
-const CONTENT_SCRIPT_RETRIES = 3;
-const CONTENT_SCRIPT_RETRY_DELAY = 2_000;
+let reconnectDelay = 500;
+const MAX_RECONNECT_DELAY = 3_000;
+const CONTENT_SCRIPT_RETRIES = 5;
+const CONTENT_SCRIPT_RETRY_DELAY = 1_500;
 
 // ── Find the active .edu tab ─────────────────────────────────────
 
 async function findEduTab(): Promise<chrome.tabs.Tab | null> {
   const tabs = await chrome.tabs.query({ url: "*://*.sml4.dmu.edu.eg/*" });
-  // Prefer the active tab, fall back to the first match
   return tabs.find((t) => t.active) ?? tabs[0] ?? null;
+}
+
+// ── Inject content script programmatically ───────────────────────
+
+async function injectContentScript(tabId: number): Promise<void> {
+  console.log("[libre-lec] injecting content script programmatically...");
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ["content.js"],
+    });
+    // Give it a moment to set up listeners + inject page-bridge
+    await new Promise((r) => setTimeout(r, 1_000));
+    console.log("[libre-lec] content script injected ✓");
+  } catch (e) {
+    console.warn(
+      "[libre-lec] programmatic injection failed:",
+      e instanceof Error ? e.message : String(e),
+    );
+  }
 }
 
 // ── Send a message to content script with retries ────────────────
@@ -21,6 +40,8 @@ async function sendToContentScript(
   tabId: number,
   command: TuiCommand,
 ): Promise<ExtResponse> {
+  let injected = false;
+
   for (let attempt = 1; attempt <= CONTENT_SCRIPT_RETRIES; attempt++) {
     try {
       const response = await chrome.tabs.sendMessage(tabId, command);
@@ -32,8 +53,15 @@ async function sendToContentScript(
         msg.includes("Could not establish connection");
 
       if (isNotReady && attempt < CONTENT_SCRIPT_RETRIES) {
+        // On first failure, try programmatic injection
+        if (!injected) {
+          await injectContentScript(tabId);
+          injected = true;
+          continue;
+        }
+
         console.log(
-          `[libre-lec] content script not ready, retry ${attempt}/${CONTENT_SCRIPT_RETRIES} in ${CONTENT_SCRIPT_RETRY_DELAY / 1000}s...`,
+          `[libre-lec] content script not ready, retry ${attempt}/${CONTENT_SCRIPT_RETRIES}...`,
         );
         await new Promise((r) => setTimeout(r, CONTENT_SCRIPT_RETRY_DELAY));
         continue;
@@ -102,7 +130,7 @@ function connect(): void {
 
   ws.onopen = () => {
     console.log("[libre-lec] connected ✓");
-    reconnectDelay = 1000; // reset backoff
+    reconnectDelay = 500; // reset backoff
   };
 
   ws.onmessage = (event) => {
@@ -119,7 +147,6 @@ function connect(): void {
   };
 
   ws.onerror = () => {
-    // onclose will fire after onerror, so reconnect is handled there
     ws?.close();
   };
 }
