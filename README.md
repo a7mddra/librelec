@@ -1,76 +1,106 @@
 # LibreLec 🔓
 
-`LibreLec` is a Python tool designed to extract high-resolution slides from protected university viewers (like PDF.js with DRM wrappers). It "hijacks" the browser canvas to reconstruct the document as a clean, local PDF, enabling you to study using modern tools like Google NotebookLM, iPad annotation apps, or simply offline.
+Extract high-resolution slides from protected university lecture viewers and save them as compressed, study-ready PDFs.
+
+LibreLec works as a **Chrome Extension** paired with a **Terminal UI** (TUI). The extension reads canvas pixels directly from the browser — no external automation, no headless browsers, no extra downloads. Just your own Chrome and a single npm command.
 
 ## Features ✨
 
-- **Canvas Hijack Protocol**: Captures the raw rendered pixels, bypassing disabled download buttons.
-- **Retina Quality**: Uses a 2.5x device scale factor to ensure text remains crisp for OCR and AI processing.
-- **Smart Auto-Discovery**: Detects DRM protection frames automatically.
-- **Manual Login**: You log in securely with your own hands; the bot simply takes over once you're in.
-- **Batch Friendly**: Smart naming (`Lec1`, `Lec2`, etc.) for extracting a whole semester quickly.
+- **Canvas Capture**: Reads rendered pixels straight from the viewer's `<canvas>` elements — bypasses disabled download buttons entirely.
+- **High Resolution**: Captures slides at native browser resolution for crisp text.
+- **Smart Compression**: Each slide is optimized via Sharp (PNG → JPEG, quality 85) before assembly — 70 MB of raw slides becomes a ~2–3 MB PDF.
+- **Cross-Platform**: Works on Linux, macOS, and Windows — anywhere Chrome and Node.js run.
+- **Step-by-Step TUI**: Guided terminal interface with progress bars, colored output, and keyboard navigation.
 
 ---
 
 ## 🚀 Getting Started
 
-### 🐧 Linux / macOS
+### 1. Install the CLI
 
-We have a one-click setup script that handles the virtual environment (`venv`) and dependencies.
+```bash
+npm install -g libre-lec
+```
 
-1.  **Open your terminal** in the project folder.
-2.  **Run the setup script**:
-    ```bash
-    chmod +x setup_env.sh
-    ./setup_env.sh
-    ```
-3.  **Launch the tool**:
-    ```bash
-    ./start.sh
-    ```
+### 2. Install the Chrome Extension
 
-### 🪟 Windows
+1. Download `libre-lec-extension.zip` from **[GitHub Releases](https://github.com/a7mddra/libre-lec/releases/download/v0.1.0/libre-lec-extension.zip)**.
+2. Extract the zip file.
+3. Open [`chrome://extensions`](chrome://extensions) in your browser.
+4. Enable **"Developer mode"** (toggle in the top right).
+5. Click **"Load unpacked"** and select the extracted folder.
+   _(Note: If Chrome shows any errors on the extension card, you can safely ignore them.)_
 
-1.  **Create a Virtual Environment**:
+### 3. Extract Lectures
 
-    ```cmd
-    python -m venv venv
-    ```
-
-2.  **Activate it**:
-
-    ```cmd
-    venv\Scripts\activate
-    ```
-
-3.  **Run the Installer**:
-    This script will install all dependencies (including `nest_asyncio`) and the Chromium browser engine.
-
-    ```cmd
-    python setup.py
-    ```
-
-4.  **Run the Tool**:
-    ```cmd
-    python librelec.py
-    ```
+1. Open the protected lecture page in Chrome and **log in normally**.
+2. In your terminal, run:
+   ```bash
+   libre-lec
+   ```
+3. The TUI will:
+   - Wait for the extension to connect.
+   - Scan for protected slides.
+   - Ask you for a PDF filename.
+   - Extract every slide with a progress bar.
+   - Compress and merge them into a single PDF.
+   - Save to your `~/Documents` folder.
 
 ---
 
-## 📖 How to Use
+## 📦 Architecture
 
-1.  **Launch `LibreLec`**.
-2.  Select **PDF Document** from the menu.
-3.  Paste your university's login URL (defaults to DMU SML4).
-4.  A browser window will open. **Log in manually**.
-5.  Navigate to the page with the locked PDF viewer.
-6.  Return to the terminal and press `ENTER`.
-7.  The tool will:
-    - Find the PDF frame.
-    - Count the pages.
-    - Scan each page at high resolution.
-    - Merge them into a PDF in your `Documents` folder.
+```
+┌─────────────────┐       WebSocket        ┌─────────────────┐
+│  Chrome Extension│◄────────────────────►│   Terminal UI     │
+│  (canvas reader) │    ws://localhost:27631│  (libre-lec CLI) │
+└─────────────────┘                        └─────────────────┘
+        │                                          │
+   page-bridge.ts                             Sharp + pdf-lib
+   canvas.toDataURL()                      PNG→JPEG → PDF assembly
+```
+
+| Package | Purpose |
+|---|---|
+| `packages/ext` | Chrome Extension (MV3) — reads canvas pixels from protected viewers |
+| `packages/tui` | Terminal UI — WS server, extraction orchestration, PDF compression |
+
+---
+
+## 🛠 Development
+
+```bash
+# Install dependencies
+npm install
+
+# Build both packages
+npm run build:ext
+npm run build:tui
+
+# Run TUI in dev mode
+npm run dev:tui
+
+# Typecheck
+npm run tsc:ext
+npm run tsc:tui
+```
+
+### Releasing
+
+```bash
+# Bump TUI → publish to npm
+node scripts/bump.mjs tui 0.2.0
+
+# Bump Extension → push tag → triggers GitHub Release
+node scripts/bump.mjs ext 0.2.0
+```
+
+---
 
 ## ⚠️ Disclaimer
 
-This tool is for **personal study use only**. Please respect your university's intellectual property and acceptable use policies. Don't distribute copyrighted materials.
+This tool is for **personal study use only**. It helps you access materials you already have legitimate access to through your university login. Please respect your institution's intellectual property and acceptable use policies. Do not distribute copyrighted materials.
+
+## 📄 License
+
+[MIT](LICENSE) © [a7mddra](https://github.com/a7mddra)
