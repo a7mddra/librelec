@@ -19,7 +19,6 @@
     "directory": "packages/tui"
   },
   "bin": {
-    "librelec": "bin/librelec.mjs",
     "librelec": "bin/librelec.mjs"
   },
   "files": [
