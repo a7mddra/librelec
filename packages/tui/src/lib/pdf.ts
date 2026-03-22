@@ -3,7 +3,13 @@
 
 import sharp from "sharp";
 import { PDFDocument } from "pdf-lib";
-import { writeFileSync, mkdirSync, readdirSync, existsSync, copyFileSync } from "node:fs";
+import {
+  writeFileSync,
+  mkdirSync,
+  readdirSync,
+  existsSync,
+  copyFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import { tmpdir, homedir, platform } from "node:os";
 
@@ -129,7 +135,11 @@ export async function assemblePdf(
   return { tempPath, safeName, sizeBytes: pdfBytes.length };
 }
 
-export function savePdfToDirectory(tempPath: string, safeName: string, targetDir: string): string {
+export function savePdfToDirectory(
+  tempPath: string,
+  safeName: string,
+  targetDir: string,
+): string {
   if (!existsSync(targetDir)) {
     mkdirSync(targetDir, { recursive: true });
   }

@@ -6,7 +6,13 @@ import { Box, Text, useInput, useApp } from "ink";
 import { SpinnerText } from "./components/SpinnerText";
 import { UI_COLORS, LOGO, gradient } from "./lib";
 import { startWsServer, stopWsServer, sendCommand, getPort } from "./lib/ws";
-import { saveSlideFromDataUrl, assemblePdf, cleanupTemp, getOutputDir, savePdfToDirectory } from "./lib/pdf";
+import {
+  saveSlideFromDataUrl,
+  assemblePdf,
+  cleanupTemp,
+  getOutputDir,
+  savePdfToDirectory,
+} from "./lib/pdf";
 
 // ── BiDi Text Helper ─────────────────────────────────────────────
 const LRI = "\u2066";
@@ -94,7 +100,11 @@ export const App = (): React.JSX.Element => {
   const [docTitle, setDocTitle] = useState("");
   const [pdfName, setPdfName] = useState("");
   const [customPath, setCustomPath] = useState("");
-  const [tempPdf, setTempPdf] = useState<{ tempPath: string; safeName: string; sizeBytes: number } | null>(null);
+  const [tempPdf, setTempPdf] = useState<{
+    tempPath: string;
+    safeName: string;
+    sizeBytes: number;
+  } | null>(null);
   const [extractProgress, setExtractProgress] = useState({
     current: 0,
     total: 0,
@@ -196,7 +206,11 @@ export const App = (): React.JSX.Element => {
   const retrySave = useCallback(() => {
     if (!tempPdf) return;
     try {
-      const finalPath = savePdfToDirectory(tempPdf.tempPath, tempPdf.safeName, customPath);
+      const finalPath = savePdfToDirectory(
+        tempPdf.tempPath,
+        tempPdf.safeName,
+        customPath,
+      );
       setResultPath(finalPath);
       const sizeMB = (tempPdf.sizeBytes / (1024 * 1024)).toFixed(1);
       setResultSize(`${sizeMB} MB`);
@@ -212,11 +226,11 @@ export const App = (): React.JSX.Element => {
       try {
         fs.copyFileSync(tempPdf.tempPath, fallbackPath);
       } catch {}
-      
+
       setResultPath(fallbackPath);
       const sizeMB = (tempPdf.sizeBytes / (1024 * 1024)).toFixed(1);
       setResultSize(`${sizeMB} MB [Saved in Temp due to directory errors]`);
-      
+
       cleanupTemp();
       setStep("done");
     }
@@ -253,14 +267,19 @@ export const App = (): React.JSX.Element => {
 
       try {
         const outDir = getOutputDir();
-        const finalPath = savePdfToDirectory(result.tempPath, result.safeName, outDir);
+        const finalPath = savePdfToDirectory(
+          result.tempPath,
+          result.safeName,
+          outDir,
+        );
         setResultPath(finalPath);
         const sizeMB = (result.sizeBytes / (1024 * 1024)).toFixed(1);
         setResultSize(`${sizeMB} MB`);
         cleanupTemp();
         setStep("done");
       } catch (saveErr) {
-        const msg = saveErr instanceof Error ? saveErr.message : String(saveErr);
+        const msg =
+          saveErr instanceof Error ? saveErr.message : String(saveErr);
         const msgLower = msg.toLowerCase();
         const isPathError =
           msg.includes("ENOENT") ||
@@ -499,7 +518,10 @@ export const App = (): React.JSX.Element => {
             </Text>
           </Box>
           <Box marginTop={0} marginLeft={2}>
-            <Text color={UI_COLORS.muted}>type the full directory path (e.g. C:\Users\public\Downloads) and press ENTER</Text>
+            <Text color={UI_COLORS.muted}>
+              type the full directory path (e.g. C:\Users\public\Downloads) and
+              press ENTER
+            </Text>
           </Box>
         </Box>
       )}
