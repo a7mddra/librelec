@@ -58,12 +58,12 @@ npm install -g @a7mddra/librelec
 
 ```text
  ┌──────────────────┐        WebSocket       ┌────────────────┐
- │  Chrome Extension│ ◄────────────────────► │   Terminal UI  │
- │  (canvas reader) │  ws://localhost:27631  │ (librelec CLI) │
+ │ Chrome Extension │ ◄────────────────────► │   Terminal UI  │
+ │ (canvas reader)  │  ws://localhost:27631  │ (librelec CLI) │
  └──────────────────┘                        └────────────────┘
-         │                                          │
-    page-bridge.ts                            Sharp + pdf-lib
-  canvas.toDataURL()                      PNG→JPEG → PDF assembly
+          │                                          │
+     page-bridge.ts                            Sharp + pdf-lib
+   canvas.toDataURL()                      PNG→JPEG → PDF assembly
 ```
 
 | Package        | Purpose                                                             |
