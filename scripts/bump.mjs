@@ -5,7 +5,9 @@ import { execSync } from "node:child_process";
 const [, , target, version] = process.argv;
 
 if (!target || !version) {
-  console.error("\x1b[31mUsage: node scripts/bump.mjs <target> <version>\x1b[0m");
+  console.error(
+    "\x1b[31mUsage: node scripts/bump.mjs <target> <version>\x1b[0m",
+  );
   process.exit(1);
 }
 
@@ -24,7 +26,9 @@ if (fs.existsSync(configPath)) {
 const config = rawConfig[target];
 
 if (!config) {
-  console.error(`\x1b[31mError: Target "${target}" not found in pkg-tools.config.json\x1b[0m`);
+  console.error(
+    `\x1b[31mError: Target "${target}" not found in pkg-tools.config.json\x1b[0m`,
+  );
   process.exit(1);
 }
 
@@ -80,14 +84,20 @@ try {
       // e.g. releases/download/v[^\/]+/librelec-extension.zip
       // We will construct a regex from the config template.
       // This is a bit tricky to make fully generic, but we can do a simple replace if we know the old version,
-      // or we can just stick to the specific regex logic if the user provides a regex, 
+      // or we can just stick to the specific regex logic if the user provides a regex,
       // but for simplicity, let's keep the specific regex pattern from before but parameterized.
       // Better yet: replace `releases/download/v[^/]+/SOMETHING` based on the template.
       const assetFile = config.readmeAssetUrl.split("/").pop(); // librelec-extension.zip
       const safeAssetFile = assetFile.replace(/\./g, "\\.");
-      const regex = new RegExp(`releases/download/v[^/]+/${safeAssetFile}`, "g");
-      const urlWithVersion = config.readmeAssetUrl.replace("%VERSION%", version);
-      
+      const regex = new RegExp(
+        `releases/download/v[^/]+/${safeAssetFile}`,
+        "g",
+      );
+      const urlWithVersion = config.readmeAssetUrl.replace(
+        "%VERSION%",
+        version,
+      );
+
       const updatedReadme = readme.replace(regex, urlWithVersion);
       if (readme !== updatedReadme) {
         fs.writeFileSync(readmePath, updatedReadme);
@@ -102,7 +112,9 @@ try {
 
   // 5. Build
   if (config.buildCommand) {
-    console.log(`\x1b[36mBuilding ${target.toUpperCase()} to check for errors...\x1b[0m`);
+    console.log(
+      `\x1b[36mBuilding ${target.toUpperCase()} to check for errors...\x1b[0m`,
+    );
     execSync(config.buildCommand, { stdio: "inherit" });
   }
 
@@ -134,7 +146,9 @@ try {
     execSync(config.postBumpScript, { stdio: "inherit" });
   }
 
-  console.log(`\x1b[32mSuccessfully bumped ${target.toUpperCase()} to v${version}!\x1b[0m`);
+  console.log(
+    `\x1b[32mSuccessfully bumped ${target.toUpperCase()} to v${version}!\x1b[0m`,
+  );
 } catch (error) {
   console.error(`\x1b[31mAn error occurred during the bump process.\x1b[0m`);
   console.error(error.message);

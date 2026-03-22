@@ -4,14 +4,9 @@
     "githubScope": "@a7mddra",
     "packageDir": "packages/tui",
     "buildCommand": "npm run build:tui",
-    
-    "bumpFiles": [
-      "package.json",
-      "packages/tui/package.json"
-    ],
-    "versionFiles": [
-      "VERSION"
-    ],
+
+    "bumpFiles": ["package.json", "packages/tui/package.json"],
+    "versionFiles": ["VERSION"],
     "readmeAssetUrl": null,
     "tagName": null,
     "commitMessage": "chore(release): tui v%VERSION%",
@@ -20,11 +15,8 @@
   "ext": {
     "packageDir": "packages/ext",
     "buildCommand": "npm run build:ext",
-    
-    "bumpFiles": [
-      "packages/ext/package.json",
-      "packages/ext/manifest.json"
-    ],
+
+    "bumpFiles": ["packages/ext/package.json", "packages/ext/manifest.json"],
     "versionFiles": [],
     "readmeAssetUrl": "releases/download/v%VERSION%/librelec-extension.zip",
     "tagName": "v%VERSION%",
