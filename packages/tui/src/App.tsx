@@ -6,7 +6,7 @@ import { Box, Text, useInput, useApp } from "ink";
 import { SpinnerText } from "./components/SpinnerText";
 import { UI_COLORS, LOGO, gradient } from "./lib";
 import { startWsServer, stopWsServer, sendCommand, getPort } from "./lib/ws";
-import { saveSlideFromDataUrl, assemblePdf, cleanupTemp } from "./lib/pdf";
+import { saveSlideFromDataUrl, assemblePdf, cleanupTemp, getOutputDir, savePdfToDirectory } from "./lib/pdf";
 
 // ── BiDi Text Helper ─────────────────────────────────────────────
 const LRI = "\u2066";
@@ -25,6 +25,7 @@ type Step =
   | "scanned"
   | "extracting"
   | "assembling"
+  | "prompt_path"
   | "done"
   | "error";
 
@@ -92,6 +93,8 @@ export const App = (): React.JSX.Element => {
   const [pageCount, setPageCount] = useState(0);
   const [docTitle, setDocTitle] = useState("");
   const [pdfName, setPdfName] = useState("");
+  const [customPath, setCustomPath] = useState("");
+  const [tempPdf, setTempPdf] = useState<{ tempPath: string; safeName: string; sizeBytes: number } | null>(null);
   const [extractProgress, setExtractProgress] = useState({
     current: 0,
     total: 0,
@@ -190,6 +193,35 @@ export const App = (): React.JSX.Element => {
     }
   }, []);
 
+  const retrySave = useCallback(() => {
+    if (!tempPdf) return;
+    try {
+      const finalPath = savePdfToDirectory(tempPdf.tempPath, tempPdf.safeName, customPath);
+      setResultPath(finalPath);
+      const sizeMB = (tempPdf.sizeBytes / (1024 * 1024)).toFixed(1);
+      setResultSize(`${sizeMB} MB`);
+
+      cleanupTemp();
+      setStep("done");
+    } catch (e) {
+      // Third fallback: failed custom path, save to OS temp dir
+      const os = require("node:os");
+      const path = require("node:path");
+      const fs = require("node:fs");
+      const fallbackPath = path.join(os.tmpdir(), tempPdf.safeName + ".pdf");
+      try {
+        fs.copyFileSync(tempPdf.tempPath, fallbackPath);
+      } catch {}
+      
+      setResultPath(fallbackPath);
+      const sizeMB = (tempPdf.sizeBytes / (1024 * 1024)).toFixed(1);
+      setResultSize(`${sizeMB} MB [Saved in Temp due to directory errors]`);
+      
+      cleanupTemp();
+      setStep("done");
+    }
+  }, [tempPdf, customPath]);
+
   const startExtracting = useCallback(async () => {
     setStep("extracting");
     const total = pageCount;
@@ -217,13 +249,34 @@ export const App = (): React.JSX.Element => {
       const result = await assemblePdf(pdfName, (current, t) => {
         setAssembleProgress({ current, total: t });
       });
+      setTempPdf(result);
 
-      setResultPath(result.path);
-      const sizeMB = (result.sizeBytes / (1024 * 1024)).toFixed(1);
-      setResultSize(`${sizeMB} MB`);
+      try {
+        const outDir = getOutputDir();
+        const finalPath = savePdfToDirectory(result.tempPath, result.safeName, outDir);
+        setResultPath(finalPath);
+        const sizeMB = (result.sizeBytes / (1024 * 1024)).toFixed(1);
+        setResultSize(`${sizeMB} MB`);
+        cleanupTemp();
+        setStep("done");
+      } catch (saveErr) {
+        const msg = saveErr instanceof Error ? saveErr.message : String(saveErr);
+        const msgLower = msg.toLowerCase();
+        const isPathError =
+          msg.includes("ENOENT") ||
+          msg.includes("EPERM") ||
+          msg.includes("EACCES") ||
+          msgLower.includes("no such file") ||
+          msgLower.includes("directory") ||
+          msgLower.includes("permission");
 
-      cleanupTemp();
-      setStep("done");
+        setErrorMsg(msg);
+        if (isPathError) {
+          setStep("prompt_path");
+        } else {
+          setStep("error");
+        }
+      }
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : String(e));
       setStep("error");
@@ -256,11 +309,23 @@ export const App = (): React.JSX.Element => {
       }
     }
 
+    if (step === "prompt_path") {
+      if (key.return && customPath.trim()) {
+        retrySave();
+      } else if (key.backspace || key.delete) {
+        setCustomPath((prev) => prev.slice(0, -1));
+      } else if (input && !key.ctrl && !key.meta && !key.return) {
+        setCustomPath((prev) => prev + input);
+      }
+    }
+
     if (step === "done" || step === "error") {
       if (key.return) {
         // Reset for another extraction
         setStep("connected");
         setPdfName("");
+        setCustomPath("");
+        setTempPdf(null);
         setExtractProgress({ current: 0, total: 0 });
         setAssembleProgress({ current: 0, total: 0 });
         setResultPath("");
@@ -411,6 +476,30 @@ export const App = (): React.JSX.Element => {
               current={assembleProgress.current}
               total={assembleProgress.total}
             />
+          </Box>
+        </Box>
+      )}
+
+      {/* Step: Prompt Path Fallback */}
+      {step === "prompt_path" && (
+        <Box flexDirection="column">
+          <Box>
+            <Text color={UI_COLORS.warning} bold>
+              ⚠ Failed to save to default directory
+            </Text>
+          </Box>
+          <Box marginLeft={2} marginBottom={1}>
+            <Text color={UI_COLORS.error}>{errorMsg}</Text>
+          </Box>
+          <Box marginTop={1}>
+            <Text color={UI_COLORS.accent}>▸ </Text>
+            <Text color={UI_COLORS.text}>Custom PDF path: </Text>
+            <Text color={UI_COLORS.highlight} bold>
+              {customPath || "…"}
+            </Text>
+          </Box>
+          <Box marginTop={0} marginLeft={2}>
+            <Text color={UI_COLORS.muted}>type the full directory path (e.g. C:\Users\public\Downloads) and press ENTER</Text>
           </Box>
         </Box>
       )}

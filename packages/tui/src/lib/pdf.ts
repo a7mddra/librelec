@@ -3,7 +3,7 @@
 
 import sharp from "sharp";
 import { PDFDocument } from "pdf-lib";
-import { writeFileSync, mkdirSync, readdirSync } from "node:fs";
+import { writeFileSync, mkdirSync, readdirSync, existsSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir, homedir, platform } from "node:os";
 
@@ -44,7 +44,9 @@ export function getOutputDir(): string {
 
   for (const dir of candidates) {
     try {
-      mkdirSync(dir, { recursive: true });
+      if (!existsSync(dir)) {
+        mkdirSync(dir, { recursive: true });
+      }
       return dir;
     } catch {
       continue;
@@ -91,7 +93,7 @@ export async function compressImage(pngPath: string): Promise<Buffer> {
 export async function assemblePdf(
   pdfName: string,
   onProgress?: (current: number, total: number) => void,
-): Promise<{ path: string; sizeBytes: number }> {
+): Promise<{ tempPath: string; safeName: string; sizeBytes: number }> {
   const dir = getTempDir();
   const files = readdirSync(dir)
     .filter((f) => f.endsWith(".png"))
@@ -116,16 +118,24 @@ export async function assemblePdf(
   }
 
   const pdfBytes = await pdfDoc.save();
-  const outputDir = getOutputDir();
 
   // Sanitize filename
   const safeName =
     pdfName.replace(/[^a-zA-Z0-9\s\-_\u0600-\u06FF]/g, "").trim() || "lecture";
 
-  const outputPath = join(outputDir, `${safeName}.pdf`);
-  writeFileSync(outputPath, pdfBytes);
+  const tempPath = join(getTempDir(), `${safeName}.pdf`);
+  writeFileSync(tempPath, pdfBytes);
 
-  return { path: outputPath, sizeBytes: pdfBytes.length };
+  return { tempPath, safeName, sizeBytes: pdfBytes.length };
+}
+
+export function savePdfToDirectory(tempPath: string, safeName: string, targetDir: string): string {
+  if (!existsSync(targetDir)) {
+    mkdirSync(targetDir, { recursive: true });
+  }
+  const outputPath = join(targetDir, `${safeName}.pdf`);
+  copyFileSync(tempPath, outputPath);
+  return outputPath;
 }
 
 // ── Cleanup ──────────────────────────────────────────────────────
